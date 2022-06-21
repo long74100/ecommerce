@@ -390,6 +390,8 @@ class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     vouchers = serializers.SerializerMethodField()
     enable_hoist_order_history = serializers.SerializerMethodField()
+    payment_method = serializers.SerializerMethodField()
+
 
     def get_vouchers(self, obj):
         try:
@@ -425,6 +427,18 @@ class OrderSerializer(serializers.ModelSerializer):
             )
         return obj.enable_hoist_order_history
 
+    def get_payment_method(self, obj):
+        try:
+            obj.payment_method = ReceiptResponseView().get_payment_method(obj)
+        except ValueError as error:
+            logger.exception(
+                'Failed to retrieve payment_method for order [%s] with error: [%s]',
+                error,
+                obj
+            )
+            return None
+        return obj.payment_method
+
     class Meta:
         model = Order
         fields = (
@@ -436,6 +450,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'lines',
             'number',
             'payment_processor',
+            'payment_method',
             'status',
             'total_excl_tax',
             'user',
