@@ -392,6 +392,7 @@ class OrderSerializer(serializers.ModelSerializer):
     enable_hoist_order_history = serializers.SerializerMethodField()
     payment_method = serializers.SerializerMethodField()
     is_enterprise_customer = serializers.SerializerMethodField()
+    total_before_discounts_incl_tax = serializers.SerializerMethodField()
 
     def get_vouchers(self, obj):
         try:
@@ -451,6 +452,12 @@ class OrderSerializer(serializers.ModelSerializer):
             return None
         return obj.is_enterprise_customer
 
+    def get_total_before_discounts_incl_tax(self, obj):
+        try:
+            return str(obj.total_before_discounts_incl_tax)
+        except ValueError:
+            return None
+
     class Meta:
         model = Order
         fields = (
@@ -465,6 +472,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'payment_processor',
             'payment_method',
             'status',
+            'total_before_discounts_incl_tax',
             'total_excl_tax',
             'user',
             'vouchers',
