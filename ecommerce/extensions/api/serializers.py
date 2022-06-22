@@ -411,7 +411,7 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_discount(self, obj):
         try:
             discount = obj.discounts.all()[0]
-            return str(discount.amount)
+            return [discount.offer.offer_type, str(discount.amount)]
         except IndexError:
             return '0'
 
