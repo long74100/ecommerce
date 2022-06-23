@@ -393,6 +393,7 @@ class OrderSerializer(serializers.ModelSerializer):
     payment_method = serializers.SerializerMethodField()
     is_enterprise_customer = serializers.SerializerMethodField()
     total_before_discounts_incl_tax = serializers.SerializerMethodField()
+    fpd_values = serializers.SerializerMethodField()
 
     def get_vouchers(self, obj):
         try:
@@ -458,6 +459,18 @@ class OrderSerializer(serializers.ModelSerializer):
         except ValueError:
             return None
 
+    def get_fpd_values(self, obj):
+        try:
+            discount = obj.discounts.all()[0]
+        except IndexError as error:
+            logger.exception(
+                'Failed to discount/fpd for order [%s] with error: [%s]',
+                error,
+                obj
+            )
+            return None
+        return discount.offer.condition.name
+
     class Meta:
         model = Order
         fields = (
@@ -466,6 +479,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'date_placed',
             'discount',
             'enable_hoist_order_history',
+            'fpd_values',
             'is_enterprise_customer',
             'lines',
             'number',
