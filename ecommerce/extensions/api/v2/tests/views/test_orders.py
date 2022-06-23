@@ -113,6 +113,24 @@ class OrderListViewTests(AccessTokenMixin, ThrottlingMixin, TestCase):
 
             self.assertEqual(content['results'][0]['enable_hoist_order_history'], enable_hoist_order_history_flag)
 
+    @mock.patch('ecommerce.extensions.checkout.views.ReceiptResponseView.order_contains_credit_seat')
+    @ddt.data(True, False)
+    def test_orders_api_attributes_for_receipt_mfe(self, should_display_credit_messaging, mock_credit_seat):
+        """ Verify that orders have the values added in the Orders API serializer """
+        create_order(site=self.site, user=self.user)
+        mock_credit_seat.return_value = should_display_credit_messaging
+
+        response = self.client.get(self.path, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(content['results'][0]['contains_credit_seat'], should_display_credit_messaging)
+        self.assertIn('is_available_to_buy', content)
+        self.assertIn('is_enrollment_code_product', content)
+        self.assertIn('is_enterprise_customer', content)
+        self.assertIn('payment_method', content)
+        self.assertIn('total_before_discounts_incl_tax', content)
+
     def test_with_other_users_orders(self):
         """ The view should only return orders for the authenticated users. """
         other_user = self.create_user()
