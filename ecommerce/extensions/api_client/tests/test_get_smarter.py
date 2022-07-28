@@ -76,7 +76,7 @@ class TestGetSmarterEnterpriseApiClient(TestCase):
             value={
                 'access_token': 'bcde',
                 'expires_in': 60,
-                'expires_at':  datetime.now(pytz.utc).timestamp() + (-60 if is_expired else 60)
+                'expires_at': datetime.now(pytz.utc).timestamp() + (-60 if is_expired else 60)
             },
             is_found=True
         )

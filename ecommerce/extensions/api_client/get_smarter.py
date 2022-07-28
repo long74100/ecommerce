@@ -93,7 +93,7 @@ class GetSmarterEnterpriseApiClient:
         """
         Fetch and return the terms and conditions from GEAG.
         """
-        url = self.api_url + '/terms'
+        url = f'{self.api_url}/terms'
         self._ensure_authentication()
         response = self.session.get(url)
         response.raise_for_status()
