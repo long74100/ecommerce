@@ -416,6 +416,7 @@ class BasketAddItemsView(BasketLogicMixin, APIView):
     permission_classes = (LoginRedirectIfUnauthenticated,)
 
     def get(self, request):
+        breakpoint()
         # Send time when this view is called - https://openedx.atlassian.net/browse/REV-984
         properties = {'emitted_at': time.time()}
         track_segment_event(request.site, request.user, 'Basket Add Items View Called', properties)
@@ -436,6 +437,7 @@ class BasketAddItemsView(BasketLogicMixin, APIView):
 
             available_products = self._get_available_products(request, products)
 
+            breakpoint()
             try:
                 basket = prepare_basket(request, available_products, voucher)
             except AlreadyPlacedOrderException:
@@ -446,6 +448,9 @@ class BasketAddItemsView(BasketLogicMixin, APIView):
             # Used basket object from request to allow enterprise offers
             # being applied on basket via BasketMiddleware
             self.verify_enterprise_needs(request.basket)
+
+            breakpoint()
+
             if code and not request.basket.vouchers.exists():
                 if not (len(available_products) == 1 and available_products[0].is_enrollment_code_product):
                     # Display an error message when an invalid code is passed as a parameter
@@ -1143,28 +1148,3 @@ class VoucherRemoveApiView(PaymentApiLogicMixin, APIView):
 
         self.reload_basket()
         return self.get_payment_api_response()
-
-
-class ExecutiveEducation2UAPIViewSet(viewsets.ViewSet):
-    permission_classes = (IsAuthenticated,)
-
-    TERMS_CACHE_TIMEOUT = 60 * 15
-    TERMS_CACHE_KEY = 'executive-education-terms'
-
-    @cached_property
-    def get_smarter_client(self):
-        return GetSmarterEnterpriseApiClient()
-
-    @cache_response(
-        TERMS_CACHE_TIMEOUT,
-        key_func=lambda *args, **kwargs: ExecutiveEducation2UAPIViewSet.TERMS_CACHE_KEY,
-        cache_errors=False,
-    )
-    @action(detail=False, methods=['get'], url_path='terms')
-    def get_terms_and_conditions(self, request):
-        try:
-            terms = self.get_smarter_client.get_terms_and_conditions()
-            return Response(terms)
-        except Exception as ex:
-            logger.exception(ex)
-            return Response('Failed to retrieve terms and conditions.', status.HTTP_500_INTERNAL_SERVER_ERROR)
